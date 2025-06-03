@@ -1,0 +1,141 @@
+#include <iostream>
+#include <unistd.h>
+#include <termio.h>
+#include <ctype.h>
+#include <cstdio>
+#include <ctime>
+#include <cstdlib>
+#include <cstring>
+using namespace std;
+
+int mode;
+
+int getch()
+{
+    struct termios nts, ots;
+
+    if (tcgetattr(0, &ots) < 0) return EOF;
+    nts = ots;
+    cfmakeraw(&nts); 
+
+    if (tcsetattr(0, TCSANOW, &nts) < 0) return EOF;
+
+    int cr;
+    cr = getchar();
+    if (tcsetattr(0, TCSANOW, &ots) < 0)  return EOF;
+    return cr;
+}
+
+
+void print(int num, string color) 
+{
+    cout << "\033[0;0H";
+    if (mode == 1) cout << "    ==== Classical Mode ====" << endl;
+    if (mode == 2) cout << "    ==== Time Limit Mode ====" << endl;
+    if (mode == 3) cout << "    ==== Endless Mode ====" << endl;
+    cout << "    ";
+    for (int i = 1; i <= 4; i++)
+    {
+        if (i == num)
+        {
+            if (color == "black") 
+                cout << "\033[37;40m " << i << " \033[0m";
+            if (color == "green")
+                cout << "\033[37;42m " << i << " \033[0m";
+            if (color == "red")
+                cout << "\033[37;41m " << i << " \033[0m";
+        }
+        else
+        {
+            cout << "\033[30;47m " << i << " \033[0m";
+        }
+    }
+    cout << endl;
+}
+
+void intro() 
+{
+    cout << "\033c" << flush;
+    cout << "    =============================================" << endl;
+    cout << "    Lets see your hand speed！don't click the white numbers！" << endl;
+    cout << "    After the game starts, click the number on your keyboard that is black on the screen (click return/enter to finish)" << endl;
+    cout << "    In this game, there are 3 game modes:" << endl;
+    cout << "    1.Classical mode: click 25 numbers in the shortest time possible" << endl;
+    cout << "    2.Time limit mode: see how many numbers you can click in 30s" << endl;
+    cout << "    3.Endless Mode: no time limit, finish when you want!" << endl;
+    cout << "    Are you ready？" << endl;
+    cout << "    choose which game mode, and we'll start~" << endl;
+    cout << "    *PS: use english input method！" << endl;
+    cout << "    =============================================" << endl;
+}
+
+void game() 
+{
+    srand(time(0)); 
+    int right = 0; 
+    int start = time(0);
+    int tme = time(0) - start; 
+    cout << "\033c" << flush; 
+    while (true)
+    {
+
+        if (mode == 1 && right >= 25) break;
+        if (mode == 2 && tme >= 30) break;
+
+
+        int r = rand() % 4 + 1;
+        print(r, "black"); 
+
+
+        char ch = getch();
+        if (r == ch - '0')
+        {
+            right++;
+            print(r, "green");
+            usleep(100000);
+            tme = time(0) - start;
+            cout << "    Time you used: " << tme << " s  " << endl;
+            cout << "    How many times you clicked: " << right << " times  "<< endl; 
+        }
+        else 
+        {
+            tme = time(0) - start;
+            cout << "\033c" << flush;
+            print(ch-'0', "red");
+            usleep(100000);
+            cout << "    ==== GAME OVER! ====" << endl;
+            usleep(500000);
+            break;
+        }
+    }
+
+    cout << "\033c" << flush;
+    cout << "    ==== Summary ====" << endl;
+    cout << "    total time used: " << tme << " s" << endl;
+    cout << "    total numbers clicked: " << right << " times" << endl;
+    cout << "    Hand speed: " << 1.0*right/tme << " times/s" << endl;
+    cout << "    ==============" << endl;
+    cout << "    press return/enter to restart the game..." << endl;
+    getchar();
+}
+
+int main()
+{
+    while (true)
+    {
+        intro();
+        char ch = getch();
+        if (ch >= '1' && ch <= '3')
+        {
+            mode = ch - '0';
+            game();
+        }
+        else if (ch == 27)
+        {
+            cout << "    Leaving game！" << endl;
+            break;
+        }
+        else  cout << "    No such result, please input again！" << endl;
+    }
+    return 0; 
+}

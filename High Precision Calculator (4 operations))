@@ -1,0 +1,150 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+void s2big(string s, int a[])
+{
+	int la = s.length();
+	for (int i = 1; i <= la; i++)
+	{
+		a[i] = s[la - i] - '0';
+	}
+	a[0] = la;
+}
+
+void i2big(int n, int a[])
+{
+	int la = 0;
+	while (n > 0)
+	{
+		la++;
+		a[la] = n % 10;
+		n /= 10;
+	}
+	if (la == 0)
+	{
+		la++;
+	}
+	a[0] = la;
+}
+
+void printbig(int a[])
+{
+	int la = a[0];
+	for (int i = la; i >= 1; i--)
+	{
+		cout << a[i];
+	}
+	cout << endl;
+}
+
+void addbig(int x[], int y[], int z[])
+{
+	z[0] = max(x[0], y[0]);
+	for (int i = 1; i <= z[0]; i++)
+	{
+		z[i] = x[i] + y[i];
+	}
+	for (int i = 1; i <= z[0]; i++)
+	{
+		z[i + 1] += z[i] / 10;
+		z[i] %= 10;
+		if (z[z[0] + 1] > 0)
+		{
+			z[0]++;
+		}
+	}
+}
+
+bool cmpbigx(int x[], int y[])
+{
+	int lx = x[0], ly = y[0];
+	if(lx != ly) return lx < ly;
+	for (int i = lx; i >= 1; i--)
+	{
+		if (x[i] != y[i]) return x[i] < y[i];
+	}
+	return false;
+}
+
+void mulbig(int x[], int y, int z[])
+{
+	z[0] = x[0];
+	for(int i = 1;i <= z[0];i++)
+	{
+		z[i] = x[i] * y;
+	}
+	for(int i = 1;i <= z[0];i++)
+	{
+		z[i + 1] += z[i] / 10;
+		z[i] %= 10;
+		if (z[z[0] + 1] > 0) 
+			z[0]++;
+	}
+}
+void subbig(int x[], int y[], int z[])
+{
+	z[0] = max (x[0], y[0]);
+	for (int i = 1; i <= z[0]; i++)
+		z[i] = x[i] - y[i];
+	for (int i=1; i <= z[0]; i++)
+	{
+		if (z[i] < 0)
+		{
+			z[i] += 10;
+			z[i +1 ]--;
+		}
+	}
+	while (z[z[0]] == 0 && z[0] > 1) z[0]--;
+}
+void divbig(int x[], int y, int z[])
+{
+	z[0] = x[0];
+	int r = 0;
+	for (int i = z[0];i >= 1;i--)
+	{
+		int t = r * 10 + x[i];
+		z[i] = t / y;
+		r = t % y;
+	}
+	while (z[z[0]] == 0 && z[0] > 1) z[0]--;
+}
+int A[1010], B[1010], ANS[1010];
+int main()
+{
+	char op;
+	cin >> op;
+	string a;
+	cin >> a;
+	s2big(a, A);
+	if (op == '+')
+	{
+		string b;
+		cin >> b;
+		s2big(b, B);
+		addbig(A, B, ANS);
+	}
+	if (op == '-')
+	{
+		string b;
+		cin >> b;
+		s2big(b, B);
+		if (cmpbigx(A, B))
+			subbig(B, A, ANS);
+		else
+			subbig(A, B, ANS);
+	}
+	if(op == '*')
+	{
+		int b;
+		cin >> b;
+		mulbig(A, b, ANS);
+	}
+	if(op == '/')
+	{
+		int b;
+		cin >> b;
+		divbig(A, b, ANS);
+	}
+	printbig(ANS);
+	return 0;
+}

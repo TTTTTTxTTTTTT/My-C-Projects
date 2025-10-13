@@ -1,0 +1,438 @@
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <iomanip>
+#include <termio.h>
+using namespace std;
+
+const int BLACK = 1;
+const int WHITE = -1;
+const int INF = 100000000;
+int num[10][10]; 
+int rd = 0; 
+int pos = 1; 
+int color = BLACK; 
+int maxD = 4; 
+
+int getch() 
+{
+    struct termios nts, ots;
+    if (tcgetattr(0, &ots) < 0) return EOF;
+    nts = ots;
+    cfmakeraw(&nts); 
+    if (tcsetattr(0, TCSANOW, &nts) < 0) return EOF;
+    int cr;
+    cr = getchar();
+    if (tcsetattr(0, TCSANOW, &ots) < 0)  return EOF;
+    return cr;
+}
+
+void moveDown() 
+{   
+    rd++;
+    for (int i = 6; i >= 1; i--)
+    {
+        if (num[i][pos] == 0)
+        {
+            num[i][pos] = color;
+            color *= -1;
+            return;
+        }
+    }
+}
+
+void moveRight() 
+{   
+    if (pos < 7) pos++;
+}
+
+void moveLeft() 
+{   
+    if (pos > 1) pos--;
+}
+
+void place(int p, int player) 
+{   
+    for (int i = 6; i >= 1; i--)
+    {
+        if (num[i][p] == 0)
+        {
+            num[i][p] = player;
+            return;
+        }
+    }
+}
+
+void remove(int p) 
+{   
+    for (int i = 1; i <= 6; i++)
+    {
+        if (num[i][p] != 0)
+        {
+            num[i][p] = 0;
+            return;
+        }
+    }
+}
+
+int findWinner() 
+{
+    for (int i = 1; i <= 6; i++)
+    {
+        for (int j = 1; j <= 7; j++)
+        {
+            if (num[i][j] == 0) continue;
+            if (i + 3 <= 6 && num[i][j] == num[i+1][j] && num[i][j] == num[i+2][j] && num[i][j] == num[i+3][j])
+                return num[i][j];
+            if (j + 3 <= 7 && num[i][j] == num[i][j+1] && num[i][j] == num[i][j+2] && num[i][j] == num[i][j+3])
+                return num[i][j];
+            if (i + 3 <= 6 && j + 3 <= 7 && num[i][j] == num[i+1][j+1] && num[i][j] == num[i+2][j+2] && num[i][j] == num[i+3][j+3])
+                return num[i][j];
+            if (i + 3 <= 6 && j - 3 >= 1 && num[i][j] == num[i+1][j-1] && num[i][j] == num[i+2][j-2] && num[i][j] == num[i+3][j-3])
+                return num[i][j];
+        }
+    }
+    return 0;
+}
+
+bool tie() 
+{
+    for (int j = 1; j <= 7; j++)
+    {
+        if (num[1][j] == 0) return false;
+    }
+    return true;
+}
+
+void drawBoard() 
+{
+    cout << "   ";
+    for (int i = 1; i <= 7; i++) 
+    {
+        if (i == pos)
+        {
+            if (color == BLACK) cout << " ●  ";
+            else cout << " ○  ";
+        }
+        else cout << "    ";
+    }
+    cout << "\n";
+    cout << "  ╔";
+    for (int i = 1; i <= 6; i++) cout << "═══╤";
+    cout << "═══╗\n";
+    for (int i = 1; i <= 6; i++) 
+    {
+        cout << "  ║";
+        for (int j = 1; j <= 7; j++) 
+        {
+            if (num[i][j] == BLACK)
+            {
+                cout << " ● ";
+            } 
+            else if (num[i][j] == WHITE)
+            {
+                cout << " ○ ";
+            }
+            else cout << "   ";
+            if (j != 7)
+                cout << "│";
+            else
+                cout << "║";
+        }
+        cout << " \n";
+        if (i != 6)
+        {
+            cout << "  ╟";
+            for (int i = 1; i <= 6; i++) cout << "───┼";
+            cout << "───╢\n";
+        }
+        else
+        {
+            cout << "  ╚";
+            for (int i = 1; i <= 6; i++) cout << "═══╧";
+            cout << "═══╝\n";
+        }
+    }
+}
+
+namespace pipi
+{
+    int eval(int player) 
+    {
+        int value = 0;
+        for (int i = 1; i <= 6; i++)
+        {
+            for (int j = 1; j <= 7; j++)
+            {
+                int cnt = 0, free = 0;
+                if (num[i][j] == player)
+                {
+                    while (num[i][j + cnt] == player)
+                    {
+                        cnt++;
+                    }
+                    if (num[i][j-1] == 0) free++;
+                    if (num[i][j+cnt] == 0) free++;
+                    if (cnt == 3 && free == 2) value += 500;
+                    if (cnt == 3 && free == 1) value += 100;
+                    if (cnt == 2 && free == 2) value += 100;
+                    if (cnt == 2 && free == 1) value += 10;
+                    j += cnt;
+                }
+            }
+        }
+        for (int j = 1; j <= 7; j++)
+        {
+            for (int i = 1; i <= 6; i++)
+            {
+                int cnt = 0, free = 0;
+                if (num[i][j] == player)
+                {
+                    while (num[i+cnt][j] == player)
+                    {
+                        cnt++;
+                    }
+                    if (num[i-1][j] == 0) free++;
+                    if (num[i+cnt][j] == 0) free++;
+                    if (cnt == 3 && free == 2) value += 500;
+                    if (cnt == 3 && free == 1) value += 100;
+                    if (cnt == 2 && free == 2) value += 100;
+                    if (cnt == 2 && free == 1) value += 10;
+                    i += cnt;
+                }
+            }
+        }
+        for (int i = 1; i <= 6; i++)
+        {
+            for (int j = 1; j <= 7; j++)
+            {
+                int cnt = 0, free = 0;
+                if (num[i-1][j-1] == player) continue;
+                if (num[i][j] == player)
+                {
+                    while (num[i+cnt][j+cnt] == player)
+                    {
+                        cnt++;
+                    }
+                    if (num[i-1][j-1] == 0) free++;
+                    if (num[i+cnt][j+cnt] == 0) free++;
+                    if (cnt == 3 && free == 2) value += 500;
+                    if (cnt == 3 && free == 1) value += 100;
+                    if (cnt == 2 && free == 2) value += 100;
+                    if (cnt == 2 && free == 1) value += 10;
+                }
+            }
+        }
+        for (int i = 1; i <= 6; i++)
+        {
+            for (int j = 1; j <= 7; j++)
+            {
+                int cnt = 0, free = 0;
+                if (num[i-1][j+1] == player) continue;
+                if (num[i][j] == player)
+                {
+                    while (num[i+cnt][j-cnt] == player)
+                    {
+                        cnt++;
+                    }
+                    if (num[i-1][j+1] == 0) free++;
+                    if (num[i+cnt][j-cnt] == 0) free++;
+                    if (cnt == 3 && free == 2) value += 500;
+                    if (cnt == 3 && free == 1) value += 100;
+                    if (cnt == 2 && free == 2) value += 100;
+                    if (cnt == 2 && free == 1) value += 10;
+                }
+            }
+        }
+        return value;
+    }
+
+    int a[55];
+    int bestMove = 0;
+
+    int miniMax(int step, int player)
+    {
+        if (findWinner() == player)
+            return INF;
+        if (findWinner() == -1*player)
+            return -INF;
+        if (step > maxD)
+        {
+            int ans = eval(player) - eval(-1*player);
+            return ans;
+        }
+        if (step % 2 == 1)
+        {
+            int maxV = -1e9;
+            for (int i = 1; i <= 7; i++)
+            {
+                if (num[1][i] == 0)
+                {
+                    a[step] = i;
+                    place(i, player);
+                    int v = miniMax(step + 1, player);
+                    if (v > maxV)
+                    {
+                        maxV = v;
+                        if (step == 1) bestMove = i;
+                    }
+                    remove(i);
+                }
+            }
+            return maxV;
+        }
+        else
+        {
+            int minV = 1e9;
+            for (int i = 1; i <= 7; i++)
+            {
+                if (num[1][i] == 0)
+                {
+                    a[step] = i;
+                    place(i, -1*player);
+                    int v = miniMax(step + 1, player);
+                    minV = min(minV, v);
+                    remove(i);
+                }
+            }
+            return minV;
+        }
+    }
+
+    int strategy(int player)
+    {
+        miniMax(1, player);
+        return bestMove;
+    }
+}
+
+void game() 
+{
+    cout << "\033c" << flush;
+    cout << "**********************************" << endl;
+    cout << "—————————— Ready Go～ ————————————" << endl;
+    cout << "**********************************" << endl;
+    getch();
+
+    char ch = 0;
+    while (true)
+    {
+        while (true)
+        {
+            cout << "\033c" << flush;
+            drawBoard();
+            cout << "Key:" << ch << " Round:" << rd << endl;
+            cout << "Tips:" << endl;
+            cout << "s - Place piece" << endl;
+            cout << "a - Move left" << endl;
+            cout << "d - Move right" << endl;
+            cout << "Esc - Quit game" << endl;
+            cout << "n - New game" << endl;
+            cout << "Select command!" << endl;
+            
+            ch = getch();
+            if (ch == 's') 
+            {
+                int preColor = color;
+                moveDown();
+                if (preColor == color) continue;
+                break;
+            }
+            else if (ch == 'a') moveLeft();
+            else if (ch == 'd') moveRight();
+            else if (ch == 27) exit(0);
+            else if (ch == 'n')
+            {
+                rd = 0;
+                memset(num, 0, sizeof(num));
+                return; 
+            }
+            else
+            {
+                cout << endl << "———————Invalid input!———————" << endl << endl;
+                continue;
+            }
+        }
+        cout << "\033c" << flush;
+        drawBoard();
+        int winner = findWinner();
+        if (winner != 0)
+        {
+            if (winner == BLACK) cout << " ● ";
+            else if (winner == WHITE) cout << " ○ ";
+            cout << "wins!" << endl;
+            break;
+        }
+        if (tie())
+        {
+            cout << "Tie game!" << endl;
+            break;
+        }
+
+        pos = pipi::strategy(WHITE);
+        moveDown();
+        cout << "\033c" << flush;
+        drawBoard();
+        winner = findWinner();
+        if (winner != 0)
+        {
+            if (winner == BLACK) cout << " ● ";
+            else if (winner == WHITE) cout << " ○ ";
+            cout << "wins!" << endl;
+            break;
+        }
+        if (tie())
+        {
+            cout << "Tie game!" << endl;
+            break;
+        }
+    }
+}
+
+void intro() 
+{
+    cout << "***********************************************************" << endl;
+    cout << "Welcome to Connect Four!" << endl;
+    cout << "Game features a 6×7 grid" << endl;
+    cout << "Use a←, s↓, d→ to select columns" << endl;
+    cout << "Connect four vertically, horizontally or diagonally to win!" << endl; 
+    cout << "Press [ENTER] to start" << endl;
+    cout << "Press [ESC] to quit" << endl;
+    cout << "***********************************************************" << endl;
+}
+
+void init()
+{
+	srand(time(0));
+	memset(num, 999999, sizeof(num));
+    for (int i = 1; i <= 6; i++)
+        for (int j = 1; j <= 7; j++)
+            num[i][j] = 0;
+	rd = 0;
+	pos = 1;
+	color = BLACK;
+}
+
+int main()
+{
+    while (true)
+    {
+    	init();
+        intro();
+        char ch;
+        ch = getch();
+        if (ch == 13)
+        {
+            game();
+        }
+        else if (ch == 27)
+        {
+            cout << "Game quit!" << endl;
+            break;
+        }
+        else cout << "Invalid input!" << endl;
+    }
+    return 0;
+}

@@ -1,0 +1,58 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+
+int main()
+{
+    srand(time(0));
+    vector<string> stocks = 
+    {
+        "AAPL - Apple Inc.",
+        "NVDA - Nvidia Corporation",
+        "MSFT - Microsoft Corporation",
+        "GOOGL - Alphabet Inc.",
+        "AMZN - Amazon.com Inc.",
+        "META - Meta Platforms Inc.",
+        "TSLA - Tesla Inc.",
+        "AVGO - Broadcom Inc.",
+        "TSM - Taiwan Semiconductor",
+        "ABBV - AbbVie Inc."
+    };
+    
+    int stockIndex = rand() % stocks.size();
+    string selectedStock = stocks[stockIndex];
+    
+    double currentPrice;
+    cout << "Enter current price for " << selectedStock << ": $";
+    cin >> currentPrice;
+    
+    int coinFlip = rand() % 2;
+    string coinResult = (coinFlip == 0) ? "Heads" : "Tails";
+    int diceRoll = (rand() % 6) + 1;
+    double percentageChange = diceRoll;
+    double newPrice;
+    if (coinFlip == 0) 
+    {
+        newPrice = currentPrice * (1 + percentageChange/100.0);
+    }
+    else
+    {
+        newPrice = currentPrice * (1 - percentageChange/100.0);
+    }
+    double roundedPrice = round(newPrice / 10) * 10;
+    cout << "\n=== Stock Market Game Results ===\n";
+    cout << "Selected Stock: " << selectedStock << endl;
+    cout << "Current Price: $" << fixed << setprecision(2) << currentPrice << endl;
+    cout << "Coin Flip: " << coinResult << endl;
+    cout << "Dice Roll: " << diceRoll << endl;
+    cout << "Percentage Change: " << (coinFlip == 0 ? "+" : "-") << percentageChange << "%" << endl;
+    cout << "Calculated Price: $" << fixed << setprecision(2) << newPrice << endl;
+    cout << "Rounded Price: $" << fixed << setprecision(0) << roundedPrice << endl;
+
+    return 0;
+}
